@@ -11,7 +11,7 @@ my $sleep_interval = 10; # interval between start & stop packet
 my $interval = 300; # interval between checks
 
 while (1) {
-    my $tmod = (time() - $t0) % $interval; # delta time mod interval, when tmod roughly = 0, time period has reset
+    my $tmod = (time() - $t0) % $interval; # periodic counter
 
     if ((0 <= $tmod) && ($tmod <= 2)) { # given a range as sometimes it weirdly skips/lags
         my $start = new Packet("Start", $Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV);

@@ -8,7 +8,7 @@ sub new {
         "3GPP-IMSI" => shift, #argv
         "3GPP-IMEISV" => shift, #argv
 
-        "Called-Station-Id" => "7124974",
+        "Called-Station-Id" => "ocspilot",
     };
 
     if ($self->{type} eq "Stop") {
@@ -29,12 +29,14 @@ sub init_args {
         $self->{func} || "/usr/local/bin/radpwtst",
         $self->{server} || '-s 165.22.63.200',
         $self->{secret} || '-secret miot',
-        "-noauth",
 
-        "-calling_station_id $self->{\"Calling-Station-Id\"}",
-        "-called_station_id $self->{\"Called-Station-Id\"}",
-        "3GPP-IMSI=$self->{\"3GPP-IMSI\"}",
-        "3GPP-IMEISV=$self->{\"3GPP-IMEISV\"}",
+        "-noauth",
+        "-trace 4",
+
+        "-calling_station_id $self->{'Calling-Station-Id'}",
+        "-called_station_id $self->{'Called-Station-Id'}",
+        "3GPP-IMSI=$self->{'3GPP-IMSI'}",
+        "3GPP-IMEISV=$self->{'3GPP-IMEISV'}",
     );
 
     return @args;
@@ -45,13 +47,11 @@ sub send {
 
     my @args = $self->init_args();
 
-    if ($self->{"type"} eq "Stop") {
+    if ($self->{type} eq "Stop") {
         push @args, "-nostart";
-
-        push @args, "-Input_Octets $self->{\"Input-Octets\"}";
-        push @args, "-Output_Octets $self->{\"Output-Octets\"}";
-
-        push @args, "Acct-Session-Time=10"; # somehow doesnt override default Acct-Session-Time = 1000
+        push @args, "-session_time 10";
+        push @args, "-Input_Octets $self->{'Input-Octets'}";
+        push @args, "-Output_Octets $self->{'Output-Octets'}";
     } else {
         push @args, "-nostop";
     }
