@@ -1,5 +1,4 @@
-#! /usr/bin/perl
-
+#!/usr/bin/perl
 package Packet;
 
 our @types = (
@@ -16,8 +15,9 @@ sub new {
         "3GPP-IMSI" => shift || 466924200000857, #argv
         "3GPP-IMEISV" => shift || 3572210751936904, #argv
 
+        "Session-Id" => shift || "anomaly packet",
         "Session-Time" => shift || 10, #param
-        "Called-Station-Id" => "ocspilot",
+        "Called-Station-Id" => "iot.internet",
     };
 
     die "Invalid packet type" unless $self->{type} ~~ @types;
@@ -34,7 +34,7 @@ sub new {
         $self->{"Output-Octets"} = int(rand($rx_range)) + $rx_base;
     }
 
-    if ($self->{type} ne "Stop") {
+    if ($self->{type} eq "Start") {
         delete $self->{'Session-Time'};
     }
 
@@ -52,12 +52,15 @@ sub init_args {
     if (($append) || !(scalar @additional_args)) {
         my @args = (
             "/usr/local/bin/radpwtst",
-            '-s 165.22.63.200',
+            #'-s 165.22.63.200',
+            "-s 127.0.0.1",
             '-secret miot',
+            '-user testing',
 
             "-noauth",
-            "-trace 4",
+            #"-trace 4",
 
+            "-session_id $self->{'Session-Id'}",
             "-calling_station_id $self->{'Calling-Station-Id'}",
             "-called_station_id $self->{'Called-Station-Id'}",
             "3GPP-IMSI=$self->{'3GPP-IMSI'}",
@@ -67,12 +70,13 @@ sub init_args {
         if ($self->{type} ne "Start") {
             if ($self->{type} eq "Stop") {
                 push @args, "-nostart";
-                push @args, "-session_time $self->{'Session-Time'}";
             } else {
                 push @args, "-alive";
                 push @args, "-nostart";
                 push @args, "-nostop";
             }
+            
+            push @args, "-session_time $self->{'Session-Time'}";
 
             push @args, "-Input_Octets $self->{'Input-Octets'}";
             push @args, "-Output_Octets $self->{'Output-Octets'}";
@@ -94,6 +98,23 @@ sub send {
     my @additional_args = @_;
 
     system(join " ", $self->init_args($append, @additional_args));
+}
+
+sub get_session_id {
+    my $length = shift || 10;
+    my @choices = (
+        0..9,
+        'a' .. 'z'
+    );
+
+    die if $length < 0;
+
+    my @id;
+    for (my $i = 0; $i < $length; $i++) {
+        push @id, $choices[rand @choices];
+    }
+
+    return join "", @id;
 }
 
 1;

@@ -1,24 +1,22 @@
-#! /usr/bin/perl
-
 use strict;
 use warnings;
 
 use Packet;
 
-die "Enter: Calling_Station_Id, 3GPP_IMSI, 3GPP_IMEISV" unless scalar @ARGV == 3;
-my ($Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV) = @ARGV;
+my ($Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV) = splice @ARGV, 0, 3;
 
 my $duration = 30;
 my $interval = 21600; # 6 hrs
 
 sub type3 {
     while (1) {
-        my $start = new Packet("Start", $Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV);
-        my $stop = new Packet("Stop", $Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV, $burst_interval);
+        my $id = Packet::get_session_id();
+        my $start = new Packet("Start", $Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV, $id);
+        my $stop = new Packet("Stop", $Calling_Station_Id, $var_3GPP_IMSI, $var_3GPP_IMEISV, $id, $duration);
                 
-        $start->send();
+        $start->send(1, @ARGV);
         sleep($duration);
-        $stop->send();
+        $stop->send(1, @ARGV);
 
         sleep($interval-$duration);
     }
